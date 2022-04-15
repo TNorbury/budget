@@ -1,5 +1,7 @@
 import 'package:isar/isar.dart';
 
+import 'package:budget/models/account/account.dart';
+
 part "transaction.g.dart";
 
 @Collection()
@@ -21,16 +23,29 @@ class Transaction {
   @Index()
   final DateTime datePosted;
 
-  final String bankOrg;
-
-  final String accountId;
+  final account = IsarLink<Account>();
 
   Transaction({
     required this.name,
     required this.memo,
     required this.amount,
     required this.datePosted,
-    required this.bankOrg,
-    required this.accountId,
   });
+
+  Transaction copyWith({
+    String? name,
+    String? memo,
+    double? amount,
+    DateTime? datePosted,
+    Account? account,
+  }) {
+    final t = Transaction(
+      name: name ?? this.name,
+      memo: memo ?? this.memo,
+      amount: amount ?? this.amount,
+      datePosted: datePosted ?? this.datePosted,
+    )..account.value = account ?? this.account.value;
+
+    return t;
+  }
 }

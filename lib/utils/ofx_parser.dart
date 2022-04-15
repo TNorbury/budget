@@ -1,3 +1,4 @@
+import 'package:budget/models/account/account.dart';
 import 'package:budget/models/bank_statement.dart';
 import 'package:budget/models/transaction/transaction.dart';
 
@@ -15,9 +16,13 @@ class OfxParser {
     String? memo;
 
     // extract the one-off information that's easy to get with regex
-    final String accountId =
-        RegExp(r'<ACCTID>(.*)').firstMatch(ofx)?.group(1) ?? "";
+    final int accountId =
+        int.tryParse(RegExp(r'<ACCTID>(.*)').firstMatch(ofx)?.group(1) ?? "") ??
+            0;
     final String bankOrg = RegExp(r'<ORG>(.*)').firstMatch(ofx)?.group(1) ?? "";
+
+    final Account account =
+        Account(bankOrg: bankOrg, accountId: accountId, nickName: "");
 
     // read the file, line by line
     // very brute force, but OFX isn't in a good
@@ -47,9 +52,7 @@ class OfxParser {
             memo: memo!,
             amount: transactionAmount!,
             datePosted: datePosted!,
-            bankOrg: bankOrg,
-            accountId: accountId,
-          ),
+          )..account.value = account,
         );
       }
 
@@ -83,7 +86,6 @@ class OfxParser {
       }
     }
 
-    return BankStatement(
-        bankOrg: bankOrg, accountId: accountId, transactions: transactions);
+    return BankStatement(account: account, transactions: transactions);
   }
 }
