@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:budget/models/account/account.dart';
+import 'package:budget/models/category/category.dart';
 import 'package:budget/models/transaction/transaction.dart';
 import 'package:budget/services/database/account_database.dart';
 import 'package:budget/services/database/transaction_database.dart';
@@ -40,7 +41,7 @@ class DatabaseService {
     final dir = await getApplicationSupportDirectory();
 
     _isar = await Isar.open(
-      schemas: [TransactionSchema, AccountSchema],
+      schemas: [TransactionSchema, AccountSchema, CategorySchema],
       directory: dir.path,
     );
 

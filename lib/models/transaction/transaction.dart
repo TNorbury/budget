@@ -1,3 +1,4 @@
+import 'package:budget/models/category/category.dart';
 import 'package:isar/isar.dart';
 
 import 'package:budget/models/account/account.dart';
@@ -24,6 +25,9 @@ class Transaction {
   final DateTime datePosted;
 
   final account = IsarLink<Account>();
+
+
+  final category = IsarLink<Category>();
 
   Transaction({
     required this.name,

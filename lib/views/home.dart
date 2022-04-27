@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:budget/services/database/database_service.dart';
 import 'package:budget/utils/ofx_parser.dart';
-import 'package:budget/widgets/transactions_for_month.dart';
+import 'package:budget/views/transactions_overview.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,7 +39,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           Expanded(
             child: Column(
               children: const [
-                Expanded(child: TransactionsForMonth()),
+                Expanded(child: Text("TODO: Budget View")),
               ],
             ),
           ),
@@ -47,7 +47,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             child: Column(
               children: [
                 ElevatedButton(
-                  child: Text("Import File"),
+                  child: const Text("Import File"),
                   onPressed: () async {
                     final result = await FilePicker.platform.pickFiles(
                       dialogTitle: "Select bank file to import",
@@ -55,20 +55,20 @@ class _HomePageState extends ConsumerState<HomePage> {
                       allowedExtensions: ["ofx"],
                       type: FileType.custom,
                     );
-          
+
                     if (result != null) {
                       File ofxFile = File(result.files.single.path!);
-          
+
                       final String fileContents = await ofxFile.readAsString();
                       // print(fileContents);
-          
+
                       final bankStatement = OfxParser.parseOFX(fileContents);
                       // print(transactions);
-          
+
                       await ref
                           .read(transactionDatabaseProvider)
                           .addTransactions(bankStatement.transactions);
-          
+
                       // ref
                       //     .read(transactionDatabaseProvider)
                       //     .getTransactions()
@@ -80,12 +80,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                     }
                   },
                 ),
-                Flexible(
-                  child: const Text(
-                    "TODO Total income and spent this month",
-                  ),
-                ),
-                Flexible(child: const Text("TODO 10 most recent transactions"))
+                // const Flexible(
+                //   child: Text(
+                //     "TODO Total income and spent this month",
+                //   ),
+                // ),
+                const Expanded(child:  TransactionsOverview())
+                // Expanded(child: TransactionsForMonth())
               ],
             ),
           )
@@ -142,5 +143,3 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 }
-
-

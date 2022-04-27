@@ -1,6 +1,6 @@
-import 'package:budget/pages/home.dart';
 import 'package:budget/services/database/database_service.dart';
 import 'package:budget/theme/theme.dart';
+import 'package:budget/views/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

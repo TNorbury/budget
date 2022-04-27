@@ -7,6 +7,13 @@ import 'package:budget/services/database/database_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 
+final transactionStreamProvider = StreamProvider.family
+    .autoDispose<Transaction?, Transaction>((ref, transaction) async* {
+  yield* ref
+      .watch(transactionDatabaseProvider)
+      .watchTransaction(transaction.id);
+});
+
 /// Handler for the transaction portion of the database
 class TransactionDatabase {
   /// Completer for the Isar reference,
@@ -50,12 +57,28 @@ class TransactionDatabase {
     );
   }
 
+  Future<void> deleteTransaction(Transaction transaction) async {
+    final Isar isar = await _isarCompleter.future;
+
+    await isar.writeTxn((isar) => isar.transactions.delete(transaction.id));
+  }
+
   /// Returns a stream which notifies whenever the transactions collection
   /// changes
   Future<Stream<void>> watchTransactions() async {
     final Isar isar = await _isarCompleter.future;
 
     return isar.transactions.watchLazy();
+  }
+
+  /// Watches the transaction with the given id for updates
+  Stream<Transaction?> watchTransaction(int transactionId) async* {
+    final Isar isar = await _isarCompleter.future;
+
+    await for (final txn
+        in isar.transactions.watchObject(transactionId, initialReturn: true)) {
+      yield txn;
+    }
   }
 
   /// Returns true if an equal transaction is already in the database
@@ -108,6 +131,7 @@ class TransactionDatabase {
               includeLower: true,
               includeUpper: false,
             )
+            .and()
             .amountLessThan(0)
             .findAll())
         .fold<double>(
@@ -117,17 +141,19 @@ class TransactionDatabase {
   Future<double> getIncomeForMonth({required Month month}) async {
     final Isar isar = await _isarCompleter.future;
 
-    return (await isar.transactions
-            .filter()
-            .datePostedBetween(
-              DateTime(month.year, month.month),
-              DateTime(month.year, month.month + 1),
-              includeLower: true,
-              includeUpper: false,
-            )
-            .amountGreaterThan(0)
-            .findAll())
-        .fold<double>(
-            0, (runningSum, transaction) => runningSum + transaction.amount);
+    final allTxns = await isar.transactions
+        .filter()
+        .datePostedBetween(
+          DateTime(month.year, month.month),
+          DateTime(month.year, month.month + 1),
+          // includeLower: true,
+          // includeUpper: false,
+        )
+        .and()
+        .amountGreaterThan(0.1)
+        .findAll();
+
+    return allTxns.fold<double>(
+        0, (runningSum, transaction) => runningSum + transaction.amount);
   }
 }

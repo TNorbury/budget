@@ -15,7 +15,7 @@ extension GetTransactionCollection on Isar {
 const TransactionSchema = CollectionSchema(
   name: 'Transaction',
   schema:
-      '{"name":"Transaction","idName":"id","properties":[{"name":"amount","type":"Float"},{"name":"datePosted","type":"Long"},{"name":"memo","type":"String"},{"name":"name","type":"String"}],"indexes":[{"name":"datePosted","unique":false,"properties":[{"name":"datePosted","type":"Value","caseSensitive":false}]}],"links":[{"name":"account","target":"Account"}]}',
+      '{"name":"Transaction","idName":"id","properties":[{"name":"amount","type":"Float"},{"name":"datePosted","type":"Long"},{"name":"memo","type":"String"},{"name":"name","type":"String"}],"indexes":[{"name":"datePosted","unique":false,"properties":[{"name":"datePosted","type":"Value","caseSensitive":false}]}],"links":[{"name":"account","target":"Account"},{"name":"category","target":"Category"}]}',
   idName: 'id',
   propertyIds: {'amount': 0, 'datePosted': 1, 'memo': 2, 'name': 3},
   listProperties: {},
@@ -25,7 +25,7 @@ const TransactionSchema = CollectionSchema(
       IndexValueType.long,
     ]
   },
-  linkIds: {'account': 0},
+  linkIds: {'account': 0, 'category': 1},
   backlinkLinkNames: {},
   getId: _transactionGetId,
   getLinks: _transactionGetLinks,
@@ -48,7 +48,7 @@ int? _transactionGetId(Transaction object) {
 }
 
 List<IsarLinkBase> _transactionGetLinks(Transaction object) {
-  return [object.account];
+  return [object.account, object.category];
 }
 
 void _transactionSerializeNative(
@@ -170,6 +170,7 @@ P _transactionDeserializePropWeb<P>(Object jsObj, String propertyName) {
 
 void _transactionAttachLinks(IsarCollection col, int id, Transaction object) {
   object.account.attach(col, col.isar.accounts, 'account', id);
+  object.category.attach(col, col.isar.categories, 'category', id);
 }
 
 extension TransactionQueryWhereSort
@@ -660,6 +661,15 @@ extension TransactionQueryLinks
       isar.accounts,
       q,
       'account',
+    );
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition> category(
+      FilterQuery<Category> q) {
+    return linkInternal(
+      isar.categories,
+      q,
+      'category',
     );
   }
 }
