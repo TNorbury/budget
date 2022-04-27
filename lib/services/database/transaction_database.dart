@@ -11,7 +11,7 @@ final transactionStreamProvider = StreamProvider.family
     .autoDispose<Transaction?, Transaction>((ref, transaction) async* {
   yield* ref
       .watch(transactionDatabaseProvider)
-      .watchTransaction(transaction.id);
+      .watchTransaction(transaction.fitId);
 });
 
 /// Handler for the transaction portion of the database
@@ -60,7 +60,8 @@ class TransactionDatabase {
   Future<void> deleteTransaction(Transaction transaction) async {
     final Isar isar = await _isarCompleter.future;
 
-    await isar.writeTxn((isar) => isar.transactions.delete(transaction.id));
+    await isar
+        .writeTxn((isar) => isar.transactions.deleteByFitId(transaction.fitId));
   }
 
   /// Returns a stream which notifies whenever the transactions collection
@@ -72,12 +73,19 @@ class TransactionDatabase {
   }
 
   /// Watches the transaction with the given id for updates
-  Stream<Transaction?> watchTransaction(int transactionId) async* {
+  Stream<Transaction?> watchTransaction(String fitId) async* {
     final Isar isar = await _isarCompleter.future;
 
-    await for (final txn
-        in isar.transactions.watchObject(transactionId, initialReturn: true)) {
-      yield txn;
+    await for (final txns in isar.transactions
+        .filter()
+        .fitIdEqualTo(fitId)
+        .limit(1)
+        .watch(initialReturn: true)) {
+      if (txns.isNotEmpty) {
+        yield txns.first;
+      } else {
+        yield null;
+      }
     }
   }
 

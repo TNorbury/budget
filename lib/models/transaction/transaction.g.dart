@@ -15,14 +15,17 @@ extension GetTransactionCollection on Isar {
 const TransactionSchema = CollectionSchema(
   name: 'Transaction',
   schema:
-      '{"name":"Transaction","idName":"id","properties":[{"name":"amount","type":"Float"},{"name":"datePosted","type":"Long"},{"name":"memo","type":"String"},{"name":"name","type":"String"}],"indexes":[{"name":"datePosted","unique":false,"properties":[{"name":"datePosted","type":"Value","caseSensitive":false}]}],"links":[{"name":"account","target":"Account"},{"name":"category","target":"Category"}]}',
+      '{"name":"Transaction","idName":"id","properties":[{"name":"amount","type":"Float"},{"name":"datePosted","type":"Long"},{"name":"fitId","type":"String"},{"name":"memo","type":"String"},{"name":"name","type":"String"}],"indexes":[{"name":"datePosted","unique":false,"properties":[{"name":"datePosted","type":"Value","caseSensitive":false}]},{"name":"fitId","unique":true,"properties":[{"name":"fitId","type":"Hash","caseSensitive":true}]}],"links":[{"name":"account","target":"Account"},{"name":"category","target":"Category"}]}',
   idName: 'id',
-  propertyIds: {'amount': 0, 'datePosted': 1, 'memo': 2, 'name': 3},
+  propertyIds: {'amount': 0, 'datePosted': 1, 'fitId': 2, 'memo': 3, 'name': 4},
   listProperties: {},
-  indexIds: {'datePosted': 0},
+  indexIds: {'datePosted': 0, 'fitId': 1},
   indexValueTypes: {
     'datePosted': [
       IndexValueType.long,
+    ],
+    'fitId': [
+      IndexValueType.stringHash,
     ]
   },
   linkIds: {'account': 0, 'category': 1},
@@ -63,11 +66,14 @@ void _transactionSerializeNative(
   final _amount = value0;
   final value1 = object.datePosted;
   final _datePosted = value1;
-  final value2 = object.memo;
-  final _memo = IsarBinaryWriter.utf8Encoder.convert(value2);
+  final value2 = object.fitId;
+  final _fitId = IsarBinaryWriter.utf8Encoder.convert(value2);
+  dynamicSize += (_fitId.length) as int;
+  final value3 = object.memo;
+  final _memo = IsarBinaryWriter.utf8Encoder.convert(value3);
   dynamicSize += (_memo.length) as int;
-  final value3 = object.name;
-  final _name = IsarBinaryWriter.utf8Encoder.convert(value3);
+  final value4 = object.name;
+  final _name = IsarBinaryWriter.utf8Encoder.convert(value4);
   dynamicSize += (_name.length) as int;
   final size = staticSize + dynamicSize;
 
@@ -77,8 +83,9 @@ void _transactionSerializeNative(
   final writer = IsarBinaryWriter(buffer, staticSize);
   writer.writeFloat(offsets[0], _amount);
   writer.writeDateTime(offsets[1], _datePosted);
-  writer.writeBytes(offsets[2], _memo);
-  writer.writeBytes(offsets[3], _name);
+  writer.writeBytes(offsets[2], _fitId);
+  writer.writeBytes(offsets[3], _memo);
+  writer.writeBytes(offsets[4], _name);
 }
 
 Transaction _transactionDeserializeNative(
@@ -89,8 +96,9 @@ Transaction _transactionDeserializeNative(
   final object = Transaction(
     amount: reader.readFloat(offsets[0]),
     datePosted: reader.readDateTime(offsets[1]),
-    memo: reader.readString(offsets[2]),
-    name: reader.readString(offsets[3]),
+    fitId: reader.readString(offsets[2]),
+    memo: reader.readString(offsets[3]),
+    name: reader.readString(offsets[4]),
   );
   _transactionAttachLinks(collection, id, object);
   return object;
@@ -109,6 +117,8 @@ P _transactionDeserializePropNative<P>(
       return (reader.readString(offset)) as P;
     case 3:
       return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readString(offset)) as P;
     default:
       throw 'Illegal propertyIndex';
   }
@@ -120,6 +130,7 @@ dynamic _transactionSerializeWeb(
   IsarNative.jsObjectSet(jsObj, 'amount', object.amount);
   IsarNative.jsObjectSet(
       jsObj, 'datePosted', object.datePosted.toUtc().millisecondsSinceEpoch);
+  IsarNative.jsObjectSet(jsObj, 'fitId', object.fitId);
   IsarNative.jsObjectSet(jsObj, 'id', object.id);
   IsarNative.jsObjectSet(jsObj, 'memo', object.memo);
   IsarNative.jsObjectSet(jsObj, 'name', object.name);
@@ -136,6 +147,7 @@ Transaction _transactionDeserializeWeb(
                 isUtc: true)
             .toLocal()
         : DateTime.fromMillisecondsSinceEpoch(0),
+    fitId: IsarNative.jsObjectGet(jsObj, 'fitId') ?? '',
     memo: IsarNative.jsObjectGet(jsObj, 'memo') ?? '',
     name: IsarNative.jsObjectGet(jsObj, 'name') ?? '',
   );
@@ -156,6 +168,8 @@ P _transactionDeserializePropWeb<P>(Object jsObj, String propertyName) {
                   isUtc: true)
               .toLocal()
           : DateTime.fromMillisecondsSinceEpoch(0)) as P;
+    case 'fitId':
+      return (IsarNative.jsObjectGet(jsObj, 'fitId') ?? '') as P;
     case 'id':
       return (IsarNative.jsObjectGet(jsObj, 'id') ?? double.negativeInfinity)
           as P;
@@ -173,6 +187,44 @@ void _transactionAttachLinks(IsarCollection col, int id, Transaction object) {
   object.category.attach(col, col.isar.categories, 'category', id);
 }
 
+extension TransactionByIndex on IsarCollection<Transaction> {
+  Future<Transaction?> getByFitId(String fitId) {
+    return getByIndex('fitId', [fitId]);
+  }
+
+  Transaction? getByFitIdSync(String fitId) {
+    return getByIndexSync('fitId', [fitId]);
+  }
+
+  Future<bool> deleteByFitId(String fitId) {
+    return deleteByIndex('fitId', [fitId]);
+  }
+
+  bool deleteByFitIdSync(String fitId) {
+    return deleteByIndexSync('fitId', [fitId]);
+  }
+
+  Future<List<Transaction?>> getAllByFitId(List<String> fitIdValues) {
+    final values = fitIdValues.map((e) => [e]).toList();
+    return getAllByIndex('fitId', values);
+  }
+
+  List<Transaction?> getAllByFitIdSync(List<String> fitIdValues) {
+    final values = fitIdValues.map((e) => [e]).toList();
+    return getAllByIndexSync('fitId', values);
+  }
+
+  Future<int> deleteAllByFitId(List<String> fitIdValues) {
+    final values = fitIdValues.map((e) => [e]).toList();
+    return deleteAllByIndex('fitId', values);
+  }
+
+  int deleteAllByFitIdSync(List<String> fitIdValues) {
+    final values = fitIdValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync('fitId', values);
+  }
+}
+
 extension TransactionQueryWhereSort
     on QueryBuilder<Transaction, Transaction, QWhere> {
   QueryBuilder<Transaction, Transaction, QAfterWhere> anyId() {
@@ -182,6 +234,11 @@ extension TransactionQueryWhereSort
   QueryBuilder<Transaction, Transaction, QAfterWhere> anyDatePosted() {
     return addWhereClauseInternal(
         const IndexWhereClause.any(indexName: 'datePosted'));
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterWhere> anyFitId() {
+    return addWhereClauseInternal(
+        const IndexWhereClause.any(indexName: 'fitId'));
   }
 }
 
@@ -312,6 +369,39 @@ extension TransactionQueryWhere
       includeUpper: includeUpper,
     ));
   }
+
+  QueryBuilder<Transaction, Transaction, QAfterWhereClause> fitIdEqualTo(
+      String fitId) {
+    return addWhereClauseInternal(IndexWhereClause.equalTo(
+      indexName: 'fitId',
+      value: [fitId],
+    ));
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterWhereClause> fitIdNotEqualTo(
+      String fitId) {
+    if (whereSortInternal == Sort.asc) {
+      return addWhereClauseInternal(IndexWhereClause.lessThan(
+        indexName: 'fitId',
+        upper: [fitId],
+        includeUpper: false,
+      )).addWhereClauseInternal(IndexWhereClause.greaterThan(
+        indexName: 'fitId',
+        lower: [fitId],
+        includeLower: false,
+      ));
+    } else {
+      return addWhereClauseInternal(IndexWhereClause.greaterThan(
+        indexName: 'fitId',
+        lower: [fitId],
+        includeLower: false,
+      )).addWhereClauseInternal(IndexWhereClause.lessThan(
+        indexName: 'fitId',
+        upper: [fitId],
+        includeUpper: false,
+      ));
+    }
+  }
 }
 
 extension TransactionQueryFilter
@@ -395,6 +485,110 @@ extension TransactionQueryFilter
       includeLower: includeLower,
       upper: upper,
       includeUpper: includeUpper,
+    ));
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition> fitIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return addFilterConditionInternal(FilterCondition(
+      type: ConditionType.eq,
+      property: 'fitId',
+      value: value,
+      caseSensitive: caseSensitive,
+    ));
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition>
+      fitIdGreaterThan(
+    String value, {
+    bool caseSensitive = true,
+    bool include = false,
+  }) {
+    return addFilterConditionInternal(FilterCondition(
+      type: ConditionType.gt,
+      include: include,
+      property: 'fitId',
+      value: value,
+      caseSensitive: caseSensitive,
+    ));
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition> fitIdLessThan(
+    String value, {
+    bool caseSensitive = true,
+    bool include = false,
+  }) {
+    return addFilterConditionInternal(FilterCondition(
+      type: ConditionType.lt,
+      include: include,
+      property: 'fitId',
+      value: value,
+      caseSensitive: caseSensitive,
+    ));
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition> fitIdBetween(
+    String lower,
+    String upper, {
+    bool caseSensitive = true,
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return addFilterConditionInternal(FilterCondition.between(
+      property: 'fitId',
+      lower: lower,
+      includeLower: includeLower,
+      upper: upper,
+      includeUpper: includeUpper,
+      caseSensitive: caseSensitive,
+    ));
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition> fitIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return addFilterConditionInternal(FilterCondition(
+      type: ConditionType.startsWith,
+      property: 'fitId',
+      value: value,
+      caseSensitive: caseSensitive,
+    ));
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition> fitIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return addFilterConditionInternal(FilterCondition(
+      type: ConditionType.endsWith,
+      property: 'fitId',
+      value: value,
+      caseSensitive: caseSensitive,
+    ));
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition> fitIdContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return addFilterConditionInternal(FilterCondition(
+      type: ConditionType.contains,
+      property: 'fitId',
+      value: value,
+      caseSensitive: caseSensitive,
+    ));
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterFilterCondition> fitIdMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return addFilterConditionInternal(FilterCondition(
+      type: ConditionType.matches,
+      property: 'fitId',
+      value: pattern,
+      caseSensitive: caseSensitive,
     ));
   }
 
@@ -692,6 +886,14 @@ extension TransactionQueryWhereSortBy
     return addSortByInternal('datePosted', Sort.desc);
   }
 
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> sortByFitId() {
+    return addSortByInternal('fitId', Sort.asc);
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> sortByFitIdDesc() {
+    return addSortByInternal('fitId', Sort.desc);
+  }
+
   QueryBuilder<Transaction, Transaction, QAfterSortBy> sortById() {
     return addSortByInternal('id', Sort.asc);
   }
@@ -735,6 +937,14 @@ extension TransactionQueryWhereSortThenBy
     return addSortByInternal('datePosted', Sort.desc);
   }
 
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> thenByFitId() {
+    return addSortByInternal('fitId', Sort.asc);
+  }
+
+  QueryBuilder<Transaction, Transaction, QAfterSortBy> thenByFitIdDesc() {
+    return addSortByInternal('fitId', Sort.desc);
+  }
+
   QueryBuilder<Transaction, Transaction, QAfterSortBy> thenById() {
     return addSortByInternal('id', Sort.asc);
   }
@@ -770,6 +980,11 @@ extension TransactionQueryWhereDistinct
     return addDistinctByInternal('datePosted');
   }
 
+  QueryBuilder<Transaction, Transaction, QDistinct> distinctByFitId(
+      {bool caseSensitive = true}) {
+    return addDistinctByInternal('fitId', caseSensitive: caseSensitive);
+  }
+
   QueryBuilder<Transaction, Transaction, QDistinct> distinctById() {
     return addDistinctByInternal('id');
   }
@@ -793,6 +1008,10 @@ extension TransactionQueryProperty
 
   QueryBuilder<Transaction, DateTime, QQueryOperations> datePostedProperty() {
     return addPropertyNameInternal('datePosted');
+  }
+
+  QueryBuilder<Transaction, String, QQueryOperations> fitIdProperty() {
+    return addPropertyNameInternal('fitId');
   }
 
   QueryBuilder<Transaction, int, QQueryOperations> idProperty() {

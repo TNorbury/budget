@@ -1,7 +1,7 @@
-import 'package:budget/models/category/category.dart';
 import 'package:isar/isar.dart';
 
 import 'package:budget/models/account/account.dart';
+import 'package:budget/models/category/category.dart';
 
 part "transaction.g.dart";
 
@@ -24,8 +24,10 @@ class Transaction {
   @Index()
   final DateTime datePosted;
 
-  final account = IsarLink<Account>();
+  @Index(unique: true)
+  final String fitId;
 
+  final account = IsarLink<Account>();
 
   final category = IsarLink<Category>();
 
@@ -34,6 +36,7 @@ class Transaction {
     required this.memo,
     required this.amount,
     required this.datePosted,
+    required this.fitId,
   });
 
   Transaction copyWith({
@@ -42,12 +45,14 @@ class Transaction {
     double? amount,
     DateTime? datePosted,
     Account? account,
+    String? fitId,
   }) {
     final t = Transaction(
       name: name ?? this.name,
       memo: memo ?? this.memo,
       amount: amount ?? this.amount,
       datePosted: datePosted ?? this.datePosted,
+      fitId: fitId ?? this.fitId,
     )..account.value = account ?? this.account.value;
 
     return t;

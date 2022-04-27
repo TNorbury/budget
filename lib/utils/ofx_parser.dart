@@ -14,6 +14,7 @@ class OfxParser {
     double? transactionAmount;
     String? name;
     String? memo;
+    String? fitId;
 
     // extract the one-off information that's easy to get with regex
     final int accountId =
@@ -52,6 +53,7 @@ class OfxParser {
             memo: memo!,
             amount: transactionAmount!,
             datePosted: datePosted!,
+            fitId: fitId!,
           )..account.value = account,
         );
       }
@@ -81,6 +83,9 @@ class OfxParser {
             break;
           case "MEMO":
             memo = value;
+            break;
+          case "FITID":
+            fitId = value;
             break;
         }
       }

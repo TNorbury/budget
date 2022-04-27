@@ -5,6 +5,7 @@ import 'package:budget/models/category/category.dart';
 import 'package:budget/models/transaction/transaction.dart';
 import 'package:budget/services/database/account_database.dart';
 import 'package:budget/services/database/transaction_database.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
@@ -18,7 +19,6 @@ final transactionDatabaseProvider = Provider<TransactionDatabase>((ref) {
 
   return TransactionDatabase(db._isarCompleter, ref.read);
 });
-
 
 final accountDatabaseProvider = Provider<AccountDatabase>((ref) {
   final db = ref.watch(databaseServiceProvider);
@@ -40,11 +40,12 @@ class DatabaseService {
   Future<void> _init() async {
     final dir = await getApplicationSupportDirectory();
 
+   debugPrint("Isar database at ${dir.path}");
     _isar = await Isar.open(
       schemas: [TransactionSchema, AccountSchema, CategorySchema],
       directory: dir.path,
+      inspector: true,
     );
-
     _isarCompleter.complete(_isar);
   }
 }
