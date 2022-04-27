@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:budget/models/transaction/transaction.dart';
 import 'package:budget/services/database/database_service.dart';
 import 'package:budget/utils/ofx_parser.dart';
 import 'package:budget/widgets/transactions_for_month.dart';
@@ -16,7 +15,7 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  List<Transaction> _t = [];
+  // List<Transaction> _t = [];
 
   @override
   void initState() {
@@ -70,14 +69,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                           .read(transactionDatabaseProvider)
                           .addTransactions(bankStatement.transactions);
           
-                      ref
-                          .read(transactionDatabaseProvider)
-                          .getTransactions()
-                          .then((value) {
-                        setState(() {
-                          _t = value;
-                        });
-                      });
+                      // ref
+                      //     .read(transactionDatabaseProvider)
+                      //     .getTransactions()
+                      //     .then((value) {
+                      //   setState(() {
+                      //     _t = value;
+                      //   });
+                      // });
                     }
                   },
                 ),

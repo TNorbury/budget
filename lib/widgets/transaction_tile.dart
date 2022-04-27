@@ -20,8 +20,10 @@ class TransactionTile extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(transaction.memo,
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Flexible(
+                child: Text(transaction.memo,
+                    style: Theme.of(context).textTheme.bodyMedium),
+              ),
               AmountText(amount: transaction.amount),
             ],
           ),

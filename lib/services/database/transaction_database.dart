@@ -22,15 +22,29 @@ class TransactionDatabase {
     Account? accountFromDb = await _read(accountDatabaseProvider)
         .getAccount(transactions.first.account.value!.accountId);
 
+    if (accountFromDb == null) {
+      await _read(accountDatabaseProvider)
+          .addAccount(transactions.first.account.value!);
+      accountFromDb = await _read(accountDatabaseProvider)
+          .getAccount(transactions.first.account.value!.accountId);
+    }
+
     await isar.writeTxn(
       (isar) async {
         // final account = accountCache.
 
         for (final transaction in transactions) {
+          bool duplicateTransaction = await containsTransaction(transaction);
+          if (duplicateTransaction) {
+            continue;
+          }
+
           await isar.transactions.put(
             transaction.copyWith(account: accountFromDb),
             saveLinks: true,
           );
+
+          // await transaction.account.save();
         }
       },
     );
@@ -44,16 +58,6 @@ class TransactionDatabase {
     return isar.transactions.watchLazy();
   }
 
-  Future<List<Transaction>> getTransactions({int limit = 20}) async {
-    final Isar isar = await _isarCompleter.future;
-    return await isar.transactions
-        .filter()
-        .datePostedGreaterThan(DateTime(2022))
-        .sortByDatePosted()
-        .limit(limit)
-        .findAll();
-  }
-
   /// Returns true if an equal transaction is already in the database
   Future<bool> containsTransaction(Transaction transaction) async {
     final Isar isar = await _isarCompleter.future;
@@ -61,11 +65,15 @@ class TransactionDatabase {
     return (await isar.transactions
             .filter()
             .datePostedEqualTo(transaction.datePosted)
+            .and()
             .nameEqualTo(transaction.name)
+            .and()
             .memoEqualTo(transaction.memo)
+            .and()
             .group((q) => q
                 .not()
                 .amountGreaterThan(transaction.amount)
+                .and()
                 .not()
                 .amountLessThan(transaction.amount))
             .count()) !=
@@ -79,8 +87,47 @@ class TransactionDatabase {
 
     return isar.transactions
         .filter()
-        .datePostedGreaterThan(DateTime(month.year, month.month), include: true)
+        .datePostedBetween(
+          DateTime(month.year, month.month),
+          DateTime(month.year, month.month + 1),
+          includeLower: true,
+          includeUpper: false,
+        )
         .sortByDatePostedDesc()
         .findAll();
+  }
+
+  Future<double> getExpensesForMonth({required Month month}) async {
+    final Isar isar = await _isarCompleter.future;
+
+    return (await isar.transactions
+            .filter()
+            .datePostedBetween(
+              DateTime(month.year, month.month),
+              DateTime(month.year, month.month + 1),
+              includeLower: true,
+              includeUpper: false,
+            )
+            .amountLessThan(0)
+            .findAll())
+        .fold<double>(
+            0, (runningSum, transaction) => runningSum + transaction.amount);
+  }
+
+  Future<double> getIncomeForMonth({required Month month}) async {
+    final Isar isar = await _isarCompleter.future;
+
+    return (await isar.transactions
+            .filter()
+            .datePostedBetween(
+              DateTime(month.year, month.month),
+              DateTime(month.year, month.month + 1),
+              includeLower: true,
+              includeUpper: false,
+            )
+            .amountGreaterThan(0)
+            .findAll())
+        .fold<double>(
+            0, (runningSum, transaction) => runningSum + transaction.amount);
   }
 }

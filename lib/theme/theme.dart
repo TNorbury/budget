@@ -5,5 +5,6 @@ import 'lib_color_schemes.g.dart';
 
 final theme = ThemeData.from(
   colorScheme: lightColorScheme,
-  textTheme: GoogleFonts.zenOldMinchoTextTheme()
+  textTheme: GoogleFonts.zenOldMinchoTextTheme(),
+  
 );

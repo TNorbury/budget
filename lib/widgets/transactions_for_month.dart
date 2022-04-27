@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:budget/theme/lib_color_schemes.g.dart';
 import 'package:budget/utils/month_from_int.dart';
 import 'package:budget/widgets/transaction_tile.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,8 @@ class _TransactionsForMonthState extends ConsumerState<TransactionsForMonth> {
   late Future<List<Transaction>> _transactionsFuture;
 
   StreamSubscription? _watchStreamSub;
+
+  Month currentMonth = Month.fromDateTime(DateTime.now());
 
   @override
   void initState() {
@@ -44,12 +47,9 @@ class _TransactionsForMonthState extends ConsumerState<TransactionsForMonth> {
 
   void _loadTransactions() {
     setState(() {
-      _transactionsFuture =
-          ref.read(transactionDatabaseProvider).getTransactionsForMonth(
-                month: Month.fromDateTime(
-                  DateTime.now(),
-                ),
-              );
+      _transactionsFuture = ref
+          .read(transactionDatabaseProvider)
+          .getTransactionsForMonth(month: currentMonth);
     });
   }
 
@@ -63,22 +63,80 @@ class _TransactionsForMonthState extends ConsumerState<TransactionsForMonth> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                "Transactions for ${monthFromInt(DateTime.now().month)}",
-                style: Theme.of(context).textTheme.headlineLarge,
+              Flexible(
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.keyboard_arrow_left,
+                        color: lightColorScheme.onSurfaceVariant,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          currentMonth = Month(
+                              year: currentMonth.year,
+                              month: currentMonth.month - 1);
+                          _loadTransactions();
+                        });
+                      },
+                    ),
+                    Flexible(
+                      child: Text(
+                        "Transactions for ${monthFromInt(currentMonth.month)} ${currentMonth.year}",
+                        style: Theme.of(context).textTheme.headlineLarge?.merge(
+                            TextStyle(
+                                color: lightColorScheme.onSurfaceVariant)),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.keyboard_arrow_right,
+                        color: lightColorScheme.onSurfaceVariant,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          currentMonth = Month(
+                              year: currentMonth.year,
+                              month: currentMonth.month + 1);
+                          _loadTransactions();
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
+
+              // if (currentMonth != )
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    currentMonth = Month.fromDateTime(DateTime.now());
+                    _loadTransactions();
+                  });
+                },
+                icon: Icon(Icons.calendar_today),
+              )
             ],
           ),
         ),
         Expanded(
           child: FutureBuilder<List<Transaction>>(
             future: _transactionsFuture,
-            initialData: const [],
+            // initialData: const [],
             builder: (context, snapshot) {
+              if (snapshot.data == null) {
+                return CircularProgressIndicator();
+              }
+
               List<Transaction> transactions = snapshot.data ?? [];
 
               return Container(
-                decoration: BoxDecoration(border: Border.all(color: Color.fromARGB(96, 124, 117, 117))),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+                ),
                 child: ListView.separated(
                   itemCount: transactions.length,
                   itemBuilder: (context, index) {
@@ -90,7 +148,7 @@ class _TransactionsForMonthState extends ConsumerState<TransactionsForMonth> {
                   separatorBuilder: (BuildContext context, int index) {
                     return Divider(
                       height: 1,
-                      color: Color.fromARGB(96, 124, 117, 117),
+                      color: Theme.of(context).colorScheme.outline,
                     );
                   },
                 ),

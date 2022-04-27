@@ -11,6 +11,12 @@ class AccountDatabase {
     this._isarCompleter,
   );
 
+  Future<void> addAccount(Account account) async {
+    final isar = await _isarCompleter.future;
+
+    await isar.writeTxn((isar) async => await isar.accounts.put(account));
+  }
+
   /// Returns the account for the given id, or null if it doesn't exist
   Future<Account?> getAccount(int accountId) async {
     final isar = await _isarCompleter.future;
