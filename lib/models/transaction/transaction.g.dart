@@ -6,213 +6,191 @@ part of 'transaction.dart';
 // IsarCollectionGenerator
 // **************************************************************************
 
-// ignore_for_file: duplicate_ignore, non_constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, unused_local_variable
 
 extension GetTransactionCollection on Isar {
-  IsarCollection<Transaction> get transactions {
-    return getCollection('Transaction');
-  }
+  IsarCollection<Transaction> get transactions => getCollection();
 }
 
-final TransactionSchema = CollectionSchema(
+const TransactionSchema = CollectionSchema(
   name: 'Transaction',
   schema:
       '{"name":"Transaction","idName":"id","properties":[{"name":"amount","type":"Float"},{"name":"datePosted","type":"Long"},{"name":"memo","type":"String"},{"name":"name","type":"String"}],"indexes":[{"name":"datePosted","unique":false,"properties":[{"name":"datePosted","type":"Value","caseSensitive":false}]}],"links":[{"name":"account","target":"Account"}]}',
-  nativeAdapter: const _TransactionNativeAdapter(),
-  webAdapter: const _TransactionWebAdapter(),
   idName: 'id',
   propertyIds: {'amount': 0, 'datePosted': 1, 'memo': 2, 'name': 3},
   listProperties: {},
   indexIds: {'datePosted': 0},
-  indexTypes: {
+  indexValueTypes: {
     'datePosted': [
-      NativeIndexType.long,
+      IndexValueType.long,
     ]
   },
   linkIds: {'account': 0},
-  backlinkIds: {},
-  linkedCollections: ['Account'],
-  getId: (obj) {
-    if (obj.id == Isar.autoIncrement) {
-      return null;
-    } else {
-      return obj.id;
-    }
-  },
-  setId: null,
-  getLinks: (obj) => [obj.account],
-  version: 2,
+  backlinkLinkNames: {},
+  getId: _transactionGetId,
+  getLinks: _transactionGetLinks,
+  attachLinks: _transactionAttachLinks,
+  serializeNative: _transactionSerializeNative,
+  deserializeNative: _transactionDeserializeNative,
+  deserializePropNative: _transactionDeserializePropNative,
+  serializeWeb: _transactionSerializeWeb,
+  deserializeWeb: _transactionDeserializeWeb,
+  deserializePropWeb: _transactionDeserializePropWeb,
+  version: 3,
 );
 
-class _TransactionWebAdapter extends IsarWebTypeAdapter<Transaction> {
-  const _TransactionWebAdapter();
-
-  @override
-  Object serialize(IsarCollection<Transaction> collection, Transaction object) {
-    final jsObj = IsarNative.newJsObject();
-    IsarNative.jsObjectSet(jsObj, 'amount', object.amount);
-    IsarNative.jsObjectSet(
-        jsObj, 'datePosted', object.datePosted.toUtc().millisecondsSinceEpoch);
-    IsarNative.jsObjectSet(jsObj, 'id', object.id);
-    IsarNative.jsObjectSet(jsObj, 'memo', object.memo);
-    IsarNative.jsObjectSet(jsObj, 'name', object.name);
-    return jsObj;
+int? _transactionGetId(Transaction object) {
+  if (object.id == Isar.autoIncrement) {
+    return null;
+  } else {
+    return object.id;
   }
+}
 
-  @override
-  Transaction deserialize(
-      IsarCollection<Transaction> collection, dynamic jsObj) {
-    final object = Transaction(
-      amount:
-          IsarNative.jsObjectGet(jsObj, 'amount') ?? double.negativeInfinity,
-      datePosted: IsarNative.jsObjectGet(jsObj, 'datePosted') != null
+List<IsarLinkBase> _transactionGetLinks(Transaction object) {
+  return [object.account];
+}
+
+void _transactionSerializeNative(
+    IsarCollection<Transaction> collection,
+    IsarRawObject rawObj,
+    Transaction object,
+    int staticSize,
+    List<int> offsets,
+    AdapterAlloc alloc) {
+  var dynamicSize = 0;
+  final value0 = object.amount;
+  final _amount = value0;
+  final value1 = object.datePosted;
+  final _datePosted = value1;
+  final value2 = object.memo;
+  final _memo = IsarBinaryWriter.utf8Encoder.convert(value2);
+  dynamicSize += (_memo.length) as int;
+  final value3 = object.name;
+  final _name = IsarBinaryWriter.utf8Encoder.convert(value3);
+  dynamicSize += (_name.length) as int;
+  final size = staticSize + dynamicSize;
+
+  rawObj.buffer = alloc(size);
+  rawObj.buffer_length = size;
+  final buffer = IsarNative.bufAsBytes(rawObj.buffer, size);
+  final writer = IsarBinaryWriter(buffer, staticSize);
+  writer.writeFloat(offsets[0], _amount);
+  writer.writeDateTime(offsets[1], _datePosted);
+  writer.writeBytes(offsets[2], _memo);
+  writer.writeBytes(offsets[3], _name);
+}
+
+Transaction _transactionDeserializeNative(
+    IsarCollection<Transaction> collection,
+    int id,
+    IsarBinaryReader reader,
+    List<int> offsets) {
+  final object = Transaction(
+    amount: reader.readFloat(offsets[0]),
+    datePosted: reader.readDateTime(offsets[1]),
+    memo: reader.readString(offsets[2]),
+    name: reader.readString(offsets[3]),
+  );
+  _transactionAttachLinks(collection, id, object);
+  return object;
+}
+
+P _transactionDeserializePropNative<P>(
+    int id, IsarBinaryReader reader, int propertyIndex, int offset) {
+  switch (propertyIndex) {
+    case -1:
+      return id as P;
+    case 0:
+      return (reader.readFloat(offset)) as P;
+    case 1:
+      return (reader.readDateTime(offset)) as P;
+    case 2:
+      return (reader.readString(offset)) as P;
+    case 3:
+      return (reader.readString(offset)) as P;
+    default:
+      throw 'Illegal propertyIndex';
+  }
+}
+
+dynamic _transactionSerializeWeb(
+    IsarCollection<Transaction> collection, Transaction object) {
+  final jsObj = IsarNative.newJsObject();
+  IsarNative.jsObjectSet(jsObj, 'amount', object.amount);
+  IsarNative.jsObjectSet(
+      jsObj, 'datePosted', object.datePosted.toUtc().millisecondsSinceEpoch);
+  IsarNative.jsObjectSet(jsObj, 'id', object.id);
+  IsarNative.jsObjectSet(jsObj, 'memo', object.memo);
+  IsarNative.jsObjectSet(jsObj, 'name', object.name);
+  return jsObj;
+}
+
+Transaction _transactionDeserializeWeb(
+    IsarCollection<Transaction> collection, dynamic jsObj) {
+  final object = Transaction(
+    amount: IsarNative.jsObjectGet(jsObj, 'amount') ?? double.negativeInfinity,
+    datePosted: IsarNative.jsObjectGet(jsObj, 'datePosted') != null
+        ? DateTime.fromMillisecondsSinceEpoch(
+                IsarNative.jsObjectGet(jsObj, 'datePosted'),
+                isUtc: true)
+            .toLocal()
+        : DateTime.fromMillisecondsSinceEpoch(0),
+    memo: IsarNative.jsObjectGet(jsObj, 'memo') ?? '',
+    name: IsarNative.jsObjectGet(jsObj, 'name') ?? '',
+  );
+  _transactionAttachLinks(collection,
+      IsarNative.jsObjectGet(jsObj, 'id') ?? double.negativeInfinity, object);
+  return object;
+}
+
+P _transactionDeserializePropWeb<P>(Object jsObj, String propertyName) {
+  switch (propertyName) {
+    case 'amount':
+      return (IsarNative.jsObjectGet(jsObj, 'amount') ??
+          double.negativeInfinity) as P;
+    case 'datePosted':
+      return (IsarNative.jsObjectGet(jsObj, 'datePosted') != null
           ? DateTime.fromMillisecondsSinceEpoch(
                   IsarNative.jsObjectGet(jsObj, 'datePosted'),
                   isUtc: true)
               .toLocal()
-          : DateTime.fromMillisecondsSinceEpoch(0),
-      memo: IsarNative.jsObjectGet(jsObj, 'memo') ?? '',
-      name: IsarNative.jsObjectGet(jsObj, 'name') ?? '',
-    );
-    attachLinks(collection.isar,
-        IsarNative.jsObjectGet(jsObj, 'id') ?? double.negativeInfinity, object);
-    return object;
-  }
-
-  @override
-  P deserializeProperty<P>(Object jsObj, String propertyName) {
-    switch (propertyName) {
-      case 'amount':
-        return (IsarNative.jsObjectGet(jsObj, 'amount') ??
-            double.negativeInfinity) as P;
-      case 'datePosted':
-        return (IsarNative.jsObjectGet(jsObj, 'datePosted') != null
-            ? DateTime.fromMillisecondsSinceEpoch(
-                    IsarNative.jsObjectGet(jsObj, 'datePosted'),
-                    isUtc: true)
-                .toLocal()
-            : DateTime.fromMillisecondsSinceEpoch(0)) as P;
-      case 'id':
-        return (IsarNative.jsObjectGet(jsObj, 'id') ?? double.negativeInfinity)
-            as P;
-      case 'memo':
-        return (IsarNative.jsObjectGet(jsObj, 'memo') ?? '') as P;
-      case 'name':
-        return (IsarNative.jsObjectGet(jsObj, 'name') ?? '') as P;
-      default:
-        throw 'Illegal propertyName';
-    }
-  }
-
-  @override
-  void attachLinks(Isar isar, int id, Transaction object) {
-    object.account.attach(
-      id,
-      isar.transactions,
-      isar.getCollection<Account>('Account'),
-      'account',
-      false,
-    );
+          : DateTime.fromMillisecondsSinceEpoch(0)) as P;
+    case 'id':
+      return (IsarNative.jsObjectGet(jsObj, 'id') ?? double.negativeInfinity)
+          as P;
+    case 'memo':
+      return (IsarNative.jsObjectGet(jsObj, 'memo') ?? '') as P;
+    case 'name':
+      return (IsarNative.jsObjectGet(jsObj, 'name') ?? '') as P;
+    default:
+      throw 'Illegal propertyName';
   }
 }
 
-class _TransactionNativeAdapter extends IsarNativeTypeAdapter<Transaction> {
-  const _TransactionNativeAdapter();
-
-  @override
-  void serialize(
-      IsarCollection<Transaction> collection,
-      IsarRawObject rawObj,
-      Transaction object,
-      int staticSize,
-      List<int> offsets,
-      AdapterAlloc alloc) {
-    var dynamicSize = 0;
-    final value0 = object.amount;
-    final _amount = value0;
-    final value1 = object.datePosted;
-    final _datePosted = value1;
-    final value2 = object.memo;
-    final _memo = IsarBinaryWriter.utf8Encoder.convert(value2);
-    dynamicSize += (_memo.length) as int;
-    final value3 = object.name;
-    final _name = IsarBinaryWriter.utf8Encoder.convert(value3);
-    dynamicSize += (_name.length) as int;
-    final size = staticSize + dynamicSize;
-
-    rawObj.buffer = alloc(size);
-    rawObj.buffer_length = size;
-    final buffer = IsarNative.bufAsBytes(rawObj.buffer, size);
-    final writer = IsarBinaryWriter(buffer, staticSize);
-    writer.writeFloat(offsets[0], _amount);
-    writer.writeDateTime(offsets[1], _datePosted);
-    writer.writeBytes(offsets[2], _memo);
-    writer.writeBytes(offsets[3], _name);
-  }
-
-  @override
-  Transaction deserialize(IsarCollection<Transaction> collection, int id,
-      IsarBinaryReader reader, List<int> offsets) {
-    final object = Transaction(
-      amount: reader.readFloat(offsets[0]),
-      datePosted: reader.readDateTime(offsets[1]),
-      memo: reader.readString(offsets[2]),
-      name: reader.readString(offsets[3]),
-    );
-    attachLinks(collection.isar, id, object);
-    return object;
-  }
-
-  @override
-  P deserializeProperty<P>(
-      int id, IsarBinaryReader reader, int propertyIndex, int offset) {
-    switch (propertyIndex) {
-      case -1:
-        return id as P;
-      case 0:
-        return (reader.readFloat(offset)) as P;
-      case 1:
-        return (reader.readDateTime(offset)) as P;
-      case 2:
-        return (reader.readString(offset)) as P;
-      case 3:
-        return (reader.readString(offset)) as P;
-      default:
-        throw 'Illegal propertyIndex';
-    }
-  }
-
-  @override
-  void attachLinks(Isar isar, int id, Transaction object) {
-    object.account.attach(
-      id,
-      isar.transactions,
-      isar.getCollection<Account>('Account'),
-      'account',
-      false,
-    );
-  }
+void _transactionAttachLinks(IsarCollection col, int id, Transaction object) {
+  object.account.attach(col, col.isar.accounts, 'account', id);
 }
 
 extension TransactionQueryWhereSort
     on QueryBuilder<Transaction, Transaction, QWhere> {
   QueryBuilder<Transaction, Transaction, QAfterWhere> anyId() {
-    return addWhereClauseInternal(const WhereClause(indexName: null));
+    return addWhereClauseInternal(const IdWhereClause.any());
   }
 
   QueryBuilder<Transaction, Transaction, QAfterWhere> anyDatePosted() {
-    return addWhereClauseInternal(const WhereClause(indexName: 'datePosted'));
+    return addWhereClauseInternal(
+        const IndexWhereClause.any(indexName: 'datePosted'));
   }
 }
 
 extension TransactionQueryWhere
     on QueryBuilder<Transaction, Transaction, QWhereClause> {
   QueryBuilder<Transaction, Transaction, QAfterWhereClause> idEqualTo(int id) {
-    return addWhereClauseInternal(WhereClause(
-      indexName: null,
-      lower: [id],
+    return addWhereClauseInternal(IdWhereClause.between(
+      lower: id,
       includeLower: true,
-      upper: [id],
+      upper: id,
       includeUpper: true,
     ));
   }
@@ -220,48 +198,33 @@ extension TransactionQueryWhere
   QueryBuilder<Transaction, Transaction, QAfterWhereClause> idNotEqualTo(
       int id) {
     if (whereSortInternal == Sort.asc) {
-      return addWhereClauseInternal(WhereClause(
-        indexName: null,
-        upper: [id],
-        includeUpper: false,
-      )).addWhereClauseInternal(WhereClause(
-        indexName: null,
-        lower: [id],
-        includeLower: false,
-      ));
+      return addWhereClauseInternal(
+        IdWhereClause.lessThan(upper: id, includeUpper: false),
+      ).addWhereClauseInternal(
+        IdWhereClause.greaterThan(lower: id, includeLower: false),
+      );
     } else {
-      return addWhereClauseInternal(WhereClause(
-        indexName: null,
-        lower: [id],
-        includeLower: false,
-      )).addWhereClauseInternal(WhereClause(
-        indexName: null,
-        upper: [id],
-        includeUpper: false,
-      ));
+      return addWhereClauseInternal(
+        IdWhereClause.greaterThan(lower: id, includeLower: false),
+      ).addWhereClauseInternal(
+        IdWhereClause.lessThan(upper: id, includeUpper: false),
+      );
     }
   }
 
   QueryBuilder<Transaction, Transaction, QAfterWhereClause> idGreaterThan(
-    int id, {
-    bool include = false,
-  }) {
-    return addWhereClauseInternal(WhereClause(
-      indexName: null,
-      lower: [id],
-      includeLower: include,
-    ));
+      int id,
+      {bool include = false}) {
+    return addWhereClauseInternal(
+      IdWhereClause.greaterThan(lower: id, includeLower: include),
+    );
   }
 
-  QueryBuilder<Transaction, Transaction, QAfterWhereClause> idLessThan(
-    int id, {
-    bool include = false,
-  }) {
-    return addWhereClauseInternal(WhereClause(
-      indexName: null,
-      upper: [id],
-      includeUpper: include,
-    ));
+  QueryBuilder<Transaction, Transaction, QAfterWhereClause> idLessThan(int id,
+      {bool include = false}) {
+    return addWhereClauseInternal(
+      IdWhereClause.lessThan(upper: id, includeUpper: include),
+    );
   }
 
   QueryBuilder<Transaction, Transaction, QAfterWhereClause> idBetween(
@@ -270,44 +233,40 @@ extension TransactionQueryWhere
     bool includeLower = true,
     bool includeUpper = true,
   }) {
-    return addWhereClauseInternal(WhereClause(
-      indexName: null,
-      lower: [lowerId],
+    return addWhereClauseInternal(IdWhereClause.between(
+      lower: lowerId,
       includeLower: includeLower,
-      upper: [upperId],
+      upper: upperId,
       includeUpper: includeUpper,
     ));
   }
 
   QueryBuilder<Transaction, Transaction, QAfterWhereClause> datePostedEqualTo(
       DateTime datePosted) {
-    return addWhereClauseInternal(WhereClause(
+    return addWhereClauseInternal(IndexWhereClause.equalTo(
       indexName: 'datePosted',
-      lower: [datePosted],
-      includeLower: true,
-      upper: [datePosted],
-      includeUpper: true,
+      value: [datePosted],
     ));
   }
 
   QueryBuilder<Transaction, Transaction, QAfterWhereClause>
       datePostedNotEqualTo(DateTime datePosted) {
     if (whereSortInternal == Sort.asc) {
-      return addWhereClauseInternal(WhereClause(
+      return addWhereClauseInternal(IndexWhereClause.lessThan(
         indexName: 'datePosted',
         upper: [datePosted],
         includeUpper: false,
-      )).addWhereClauseInternal(WhereClause(
+      )).addWhereClauseInternal(IndexWhereClause.greaterThan(
         indexName: 'datePosted',
         lower: [datePosted],
         includeLower: false,
       ));
     } else {
-      return addWhereClauseInternal(WhereClause(
+      return addWhereClauseInternal(IndexWhereClause.greaterThan(
         indexName: 'datePosted',
         lower: [datePosted],
         includeLower: false,
-      )).addWhereClauseInternal(WhereClause(
+      )).addWhereClauseInternal(IndexWhereClause.lessThan(
         indexName: 'datePosted',
         upper: [datePosted],
         includeUpper: false,
@@ -320,7 +279,7 @@ extension TransactionQueryWhere
     DateTime datePosted, {
     bool include = false,
   }) {
-    return addWhereClauseInternal(WhereClause(
+    return addWhereClauseInternal(IndexWhereClause.greaterThan(
       indexName: 'datePosted',
       lower: [datePosted],
       includeLower: include,
@@ -331,7 +290,7 @@ extension TransactionQueryWhere
     DateTime datePosted, {
     bool include = false,
   }) {
-    return addWhereClauseInternal(WhereClause(
+    return addWhereClauseInternal(IndexWhereClause.lessThan(
       indexName: 'datePosted',
       upper: [datePosted],
       includeUpper: include,
@@ -344,7 +303,7 @@ extension TransactionQueryWhere
     bool includeLower = true,
     bool includeUpper = true,
   }) {
-    return addWhereClauseInternal(WhereClause(
+    return addWhereClauseInternal(IndexWhereClause.between(
       indexName: 'datePosted',
       lower: [lowerDatePosted],
       includeLower: includeLower,

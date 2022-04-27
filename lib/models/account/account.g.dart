@@ -6,170 +6,151 @@ part of 'account.dart';
 // IsarCollectionGenerator
 // **************************************************************************
 
-// ignore_for_file: duplicate_ignore, non_constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, unused_local_variable
 
 extension GetAccountCollection on Isar {
-  IsarCollection<Account> get accounts {
-    return getCollection('Account');
-  }
+  IsarCollection<Account> get accounts => getCollection();
 }
 
-final AccountSchema = CollectionSchema(
+const AccountSchema = CollectionSchema(
   name: 'Account',
   schema:
-      '{"name":"Account","idName":"accountId","properties":[{"name":"bankOrg","type":"String"},{"name":"nickName","type":"String"}],"indexes":[],"links":[]}',
-  nativeAdapter: const _AccountNativeAdapter(),
-  webAdapter: const _AccountWebAdapter(),
+      '{"name":"Account","idName":"accountId","properties":[{"name":"bankOrg","type":"String"},{"name":"nickName","type":"String"}],"indexes":[],"links":[{"name":"transactions","target":"Transaction"}]}',
   idName: 'accountId',
   propertyIds: {'bankOrg': 0, 'nickName': 1},
   listProperties: {},
   indexIds: {},
-  indexTypes: {},
-  linkIds: {},
-  backlinkIds: {'transactions': 0},
-  linkedCollections: ['Transaction'],
-  getId: (obj) {
-    if (obj.accountId == Isar.autoIncrement) {
-      return null;
-    } else {
-      return obj.accountId;
-    }
-  },
-  setId: null,
-  getLinks: (obj) => [obj.transactions],
-  version: 2,
+  indexValueTypes: {},
+  linkIds: {'transactions': 0},
+  backlinkLinkNames: {},
+  getId: _accountGetId,
+  getLinks: _accountGetLinks,
+  attachLinks: _accountAttachLinks,
+  serializeNative: _accountSerializeNative,
+  deserializeNative: _accountDeserializeNative,
+  deserializePropNative: _accountDeserializePropNative,
+  serializeWeb: _accountSerializeWeb,
+  deserializeWeb: _accountDeserializeWeb,
+  deserializePropWeb: _accountDeserializePropWeb,
+  version: 3,
 );
 
-class _AccountWebAdapter extends IsarWebTypeAdapter<Account> {
-  const _AccountWebAdapter();
-
-  @override
-  Object serialize(IsarCollection<Account> collection, Account object) {
-    final jsObj = IsarNative.newJsObject();
-    IsarNative.jsObjectSet(jsObj, 'accountId', object.accountId);
-    IsarNative.jsObjectSet(jsObj, 'bankOrg', object.bankOrg);
-    IsarNative.jsObjectSet(jsObj, 'nickName', object.nickName);
-    return jsObj;
-  }
-
-  @override
-  Account deserialize(IsarCollection<Account> collection, dynamic jsObj) {
-    final object = Account(
-      accountId:
-          IsarNative.jsObjectGet(jsObj, 'accountId') ?? double.negativeInfinity,
-      bankOrg: IsarNative.jsObjectGet(jsObj, 'bankOrg') ?? '',
-      nickName: IsarNative.jsObjectGet(jsObj, 'nickName') ?? '',
-    );
-    attachLinks(
-        collection.isar,
-        IsarNative.jsObjectGet(jsObj, 'accountId') ?? double.negativeInfinity,
-        object);
-    return object;
-  }
-
-  @override
-  P deserializeProperty<P>(Object jsObj, String propertyName) {
-    switch (propertyName) {
-      case 'accountId':
-        return (IsarNative.jsObjectGet(jsObj, 'accountId') ??
-            double.negativeInfinity) as P;
-      case 'bankOrg':
-        return (IsarNative.jsObjectGet(jsObj, 'bankOrg') ?? '') as P;
-      case 'nickName':
-        return (IsarNative.jsObjectGet(jsObj, 'nickName') ?? '') as P;
-      default:
-        throw 'Illegal propertyName';
-    }
-  }
-
-  @override
-  void attachLinks(Isar isar, int id, Account object) {
-    object.transactions.attach(
-      id,
-      isar.accounts,
-      isar.getCollection<Transaction>('Transaction'),
-      'transactions',
-      true,
-    );
+int? _accountGetId(Account object) {
+  if (object.accountId == Isar.autoIncrement) {
+    return null;
+  } else {
+    return object.accountId;
   }
 }
 
-class _AccountNativeAdapter extends IsarNativeTypeAdapter<Account> {
-  const _AccountNativeAdapter();
+List<IsarLinkBase> _accountGetLinks(Account object) {
+  return [object.transactions];
+}
 
-  @override
-  void serialize(IsarCollection<Account> collection, IsarRawObject rawObj,
-      Account object, int staticSize, List<int> offsets, AdapterAlloc alloc) {
-    var dynamicSize = 0;
-    final value0 = object.bankOrg;
-    final _bankOrg = IsarBinaryWriter.utf8Encoder.convert(value0);
-    dynamicSize += (_bankOrg.length) as int;
-    final value1 = object.nickName;
-    final _nickName = IsarBinaryWriter.utf8Encoder.convert(value1);
-    dynamicSize += (_nickName.length) as int;
-    final size = staticSize + dynamicSize;
+void _accountSerializeNative(
+    IsarCollection<Account> collection,
+    IsarRawObject rawObj,
+    Account object,
+    int staticSize,
+    List<int> offsets,
+    AdapterAlloc alloc) {
+  var dynamicSize = 0;
+  final value0 = object.bankOrg;
+  final _bankOrg = IsarBinaryWriter.utf8Encoder.convert(value0);
+  dynamicSize += (_bankOrg.length) as int;
+  final value1 = object.nickName;
+  final _nickName = IsarBinaryWriter.utf8Encoder.convert(value1);
+  dynamicSize += (_nickName.length) as int;
+  final size = staticSize + dynamicSize;
 
-    rawObj.buffer = alloc(size);
-    rawObj.buffer_length = size;
-    final buffer = IsarNative.bufAsBytes(rawObj.buffer, size);
-    final writer = IsarBinaryWriter(buffer, staticSize);
-    writer.writeBytes(offsets[0], _bankOrg);
-    writer.writeBytes(offsets[1], _nickName);
+  rawObj.buffer = alloc(size);
+  rawObj.buffer_length = size;
+  final buffer = IsarNative.bufAsBytes(rawObj.buffer, size);
+  final writer = IsarBinaryWriter(buffer, staticSize);
+  writer.writeBytes(offsets[0], _bankOrg);
+  writer.writeBytes(offsets[1], _nickName);
+}
+
+Account _accountDeserializeNative(IsarCollection<Account> collection, int id,
+    IsarBinaryReader reader, List<int> offsets) {
+  final object = Account(
+    accountId: id,
+    bankOrg: reader.readString(offsets[0]),
+    nickName: reader.readString(offsets[1]),
+  );
+  _accountAttachLinks(collection, id, object);
+  return object;
+}
+
+P _accountDeserializePropNative<P>(
+    int id, IsarBinaryReader reader, int propertyIndex, int offset) {
+  switch (propertyIndex) {
+    case -1:
+      return id as P;
+    case 0:
+      return (reader.readString(offset)) as P;
+    case 1:
+      return (reader.readString(offset)) as P;
+    default:
+      throw 'Illegal propertyIndex';
   }
+}
 
-  @override
-  Account deserialize(IsarCollection<Account> collection, int id,
-      IsarBinaryReader reader, List<int> offsets) {
-    final object = Account(
-      accountId: id,
-      bankOrg: reader.readString(offsets[0]),
-      nickName: reader.readString(offsets[1]),
-    );
-    attachLinks(collection.isar, id, object);
-    return object;
-  }
+dynamic _accountSerializeWeb(
+    IsarCollection<Account> collection, Account object) {
+  final jsObj = IsarNative.newJsObject();
+  IsarNative.jsObjectSet(jsObj, 'accountId', object.accountId);
+  IsarNative.jsObjectSet(jsObj, 'bankOrg', object.bankOrg);
+  IsarNative.jsObjectSet(jsObj, 'nickName', object.nickName);
+  return jsObj;
+}
 
-  @override
-  P deserializeProperty<P>(
-      int id, IsarBinaryReader reader, int propertyIndex, int offset) {
-    switch (propertyIndex) {
-      case -1:
-        return id as P;
-      case 0:
-        return (reader.readString(offset)) as P;
-      case 1:
-        return (reader.readString(offset)) as P;
-      default:
-        throw 'Illegal propertyIndex';
-    }
-  }
+Account _accountDeserializeWeb(
+    IsarCollection<Account> collection, dynamic jsObj) {
+  final object = Account(
+    accountId:
+        IsarNative.jsObjectGet(jsObj, 'accountId') ?? double.negativeInfinity,
+    bankOrg: IsarNative.jsObjectGet(jsObj, 'bankOrg') ?? '',
+    nickName: IsarNative.jsObjectGet(jsObj, 'nickName') ?? '',
+  );
+  _accountAttachLinks(
+      collection,
+      IsarNative.jsObjectGet(jsObj, 'accountId') ?? double.negativeInfinity,
+      object);
+  return object;
+}
 
-  @override
-  void attachLinks(Isar isar, int id, Account object) {
-    object.transactions.attach(
-      id,
-      isar.accounts,
-      isar.getCollection<Transaction>('Transaction'),
-      'transactions',
-      true,
-    );
+P _accountDeserializePropWeb<P>(Object jsObj, String propertyName) {
+  switch (propertyName) {
+    case 'accountId':
+      return (IsarNative.jsObjectGet(jsObj, 'accountId') ??
+          double.negativeInfinity) as P;
+    case 'bankOrg':
+      return (IsarNative.jsObjectGet(jsObj, 'bankOrg') ?? '') as P;
+    case 'nickName':
+      return (IsarNative.jsObjectGet(jsObj, 'nickName') ?? '') as P;
+    default:
+      throw 'Illegal propertyName';
   }
+}
+
+void _accountAttachLinks(IsarCollection col, int id, Account object) {
+  object.transactions.attach(col, col.isar.transactions, 'transactions', id);
 }
 
 extension AccountQueryWhereSort on QueryBuilder<Account, Account, QWhere> {
   QueryBuilder<Account, Account, QAfterWhere> anyAccountId() {
-    return addWhereClauseInternal(const WhereClause(indexName: null));
+    return addWhereClauseInternal(const IdWhereClause.any());
   }
 }
 
 extension AccountQueryWhere on QueryBuilder<Account, Account, QWhereClause> {
   QueryBuilder<Account, Account, QAfterWhereClause> accountIdEqualTo(
       int accountId) {
-    return addWhereClauseInternal(WhereClause(
-      indexName: null,
-      lower: [accountId],
+    return addWhereClauseInternal(IdWhereClause.between(
+      lower: accountId,
       includeLower: true,
-      upper: [accountId],
+      upper: accountId,
       includeUpper: true,
     ));
   }
@@ -177,48 +158,34 @@ extension AccountQueryWhere on QueryBuilder<Account, Account, QWhereClause> {
   QueryBuilder<Account, Account, QAfterWhereClause> accountIdNotEqualTo(
       int accountId) {
     if (whereSortInternal == Sort.asc) {
-      return addWhereClauseInternal(WhereClause(
-        indexName: null,
-        upper: [accountId],
-        includeUpper: false,
-      )).addWhereClauseInternal(WhereClause(
-        indexName: null,
-        lower: [accountId],
-        includeLower: false,
-      ));
+      return addWhereClauseInternal(
+        IdWhereClause.lessThan(upper: accountId, includeUpper: false),
+      ).addWhereClauseInternal(
+        IdWhereClause.greaterThan(lower: accountId, includeLower: false),
+      );
     } else {
-      return addWhereClauseInternal(WhereClause(
-        indexName: null,
-        lower: [accountId],
-        includeLower: false,
-      )).addWhereClauseInternal(WhereClause(
-        indexName: null,
-        upper: [accountId],
-        includeUpper: false,
-      ));
+      return addWhereClauseInternal(
+        IdWhereClause.greaterThan(lower: accountId, includeLower: false),
+      ).addWhereClauseInternal(
+        IdWhereClause.lessThan(upper: accountId, includeUpper: false),
+      );
     }
   }
 
   QueryBuilder<Account, Account, QAfterWhereClause> accountIdGreaterThan(
-    int accountId, {
-    bool include = false,
-  }) {
-    return addWhereClauseInternal(WhereClause(
-      indexName: null,
-      lower: [accountId],
-      includeLower: include,
-    ));
+      int accountId,
+      {bool include = false}) {
+    return addWhereClauseInternal(
+      IdWhereClause.greaterThan(lower: accountId, includeLower: include),
+    );
   }
 
   QueryBuilder<Account, Account, QAfterWhereClause> accountIdLessThan(
-    int accountId, {
-    bool include = false,
-  }) {
-    return addWhereClauseInternal(WhereClause(
-      indexName: null,
-      upper: [accountId],
-      includeUpper: include,
-    ));
+      int accountId,
+      {bool include = false}) {
+    return addWhereClauseInternal(
+      IdWhereClause.lessThan(upper: accountId, includeUpper: include),
+    );
   }
 
   QueryBuilder<Account, Account, QAfterWhereClause> accountIdBetween(
@@ -227,11 +194,10 @@ extension AccountQueryWhere on QueryBuilder<Account, Account, QWhereClause> {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
-    return addWhereClauseInternal(WhereClause(
-      indexName: null,
-      lower: [lowerAccountId],
+    return addWhereClauseInternal(IdWhereClause.between(
+      lower: lowerAccountId,
       includeLower: includeLower,
-      upper: [upperAccountId],
+      upper: upperAccountId,
       includeUpper: includeUpper,
     ));
   }

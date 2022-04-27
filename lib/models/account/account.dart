@@ -13,7 +13,7 @@ class Account {
 
   final String nickName;
 
-  @Backlink(to: "account")
+  // @Backlink(to: "account")
   final transactions = IsarLinks<Transaction>();
 
   Account({
